@@ -1,0 +1,35 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npx tsc --build && node dist/index.js",
+    "dev": "npx tsc --build && nodemon dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@clerk/clerk-sdk-node": "^4.13.23",
+    "@neondatabase/serverless": "^1.0.2",
+    "@supabase/supabase-js": "^2.87.1",
+    "@types/express": "^5.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.44.7",
+    "express": "^5.1.0",
+    "multer": "^2.0.2",
+    "typescript": "^5.9.3",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^25.0.0",
+    "drizzle-kit": "^0.31.8",
+    "tsx": "^4.21.0"
+  }
+}
