@@ -19,11 +19,13 @@ export default function Page() {
   const { user } = useUser();
   const [FileId, setFileId] = useState("");
   const [publicUrl, setPublicUrl] = useState("");
+  const [FileInfoId,setFileInfoId] = useState("");
 
   useEffect(() => {
     console.log("Updated fileId:", FileId);
     console.log("Public url :", publicUrl);
-  }, [FileId, publicUrl]);
+    console.log("Updated FileInfoId :", FileInfoId);
+  }, [FileId, publicUrl,FileInfoId]);
 
   const handleFileUpload = async (files: File[]) => {
     if (!isSignedIn) {
@@ -141,6 +143,7 @@ export default function Page() {
         body: JSON.stringify({
           clerk_id: id,
           file_id: FileId,
+          file_information_id : FileInfoId,
           title,
         }),
       });
@@ -191,6 +194,7 @@ export default function Page() {
 
       const data = await response.json();
       console.log("Text extracted successfully:", data);
+      setFileInfoId(data.id);
       toast.success("Document processed successfully!");
 
     } catch (err: any) {
@@ -289,6 +293,7 @@ export default function Page() {
               />
               <Button
                 onClick={handleSubmit}
+                disabled={isUploading}
                 className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-3 rounded-xl transition-all duration-300 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50"
               >
                 Submit Query

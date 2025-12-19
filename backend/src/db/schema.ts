@@ -52,6 +52,10 @@ export const ragSessions = pgTable("rag_sessions", {
     .notNull()
     .references(() => files.id, { onDelete: "cascade" }),
 
+  fileInformation : uuid("file_Infomation")
+                    .notNull()
+                    .references(()=>fileInformation.id ,{ onDelete : "cascade" }),
+
   title: varchar("title", { length: 150 }),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });

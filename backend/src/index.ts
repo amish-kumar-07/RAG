@@ -111,7 +111,9 @@ app.post("/extract", async (req, res) => {
 
     return res.status(201).json({
       message: "Text extracted and stored successfully",
-      ...result,
+      id: result.data.id,          // ✅ exposed explicitly 
+      success: true,
+      data: result, 
     });
 
   } catch (err: any) {

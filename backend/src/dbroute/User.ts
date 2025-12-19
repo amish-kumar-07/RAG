@@ -50,14 +50,14 @@ router.post("/register", async (req, res) => {
 
 router.post("/create-session", async(req,res)=>{
   try {
-    const { clerk_id, file_id , title } = req.body;
+    const { clerk_id, file_id , file_information_id, title } = req.body;
     
     if(!clerk_id || !title || !file_id)
     {
       return res.status(401).json({message : "All fields are required."});
     }
 
-    const session = await CreateSession(clerk_id, file_id , title);
+    const session = await CreateSession(clerk_id, file_id , file_information_id, title);
     return res.status(201).json({
       message: "Session created successfully",
       session,

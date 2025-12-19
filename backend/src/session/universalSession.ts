@@ -1,7 +1,7 @@
 import { db } from "../db/index.js";
 import { ragSessions } from "../db/schema.js";
 
-export async function CreateSession(clerk_id: string,file_id : string ,title?: string) {
+export async function CreateSession(clerk_id: string,file_id : string,file_information_id : string ,title?: string) {
   if (!clerk_id) {
     throw new Error("clerk_id is required to create a session");
   }
@@ -11,6 +11,7 @@ export async function CreateSession(clerk_id: string,file_id : string ,title?: s
     .values({
       clerk_id: clerk_id,
       file_id : file_id,
+      fileInformation : file_information_id,
       title: title || "New RAG Session",
     })
     .returning();
