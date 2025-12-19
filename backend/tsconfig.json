@@ -5,6 +5,8 @@
     "module": "nodenext",
     "target": "esnext",
     "types": ["node"],
+    "esModuleInterop":true,
+    "allowSyntheticDefaultImports":true,
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,

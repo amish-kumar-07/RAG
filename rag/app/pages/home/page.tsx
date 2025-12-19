@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
@@ -12,11 +12,18 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL!;
 export default function Page() {
   const [files, setFiles] = useState<File[]>([]);
   const [query, setQuery] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
   const toast = useToast();
   const router = useRouter();
   const { getToken, isSignedIn } = useAuth();
   const { user } = useUser();
+  const [FileId, setFileId] = useState("");
+  const [publicUrl, setPublicUrl] = useState("");
 
+  useEffect(() => {
+    console.log("Updated fileId:", FileId);
+    console.log("Public url :", publicUrl);
+  }, [FileId, publicUrl]);
 
   const handleFileUpload = async (files: File[]) => {
     if (!isSignedIn) {
@@ -30,21 +37,26 @@ export default function Page() {
     }
 
     if (files.length === 0) return;
+
     const userId = user?.id;
     if (!userId) {
       toast.error("User id missing. Please sign in again.");
       return;
     }
+
+    setIsUploading(true); // Start loader
+
     const token = await getToken(); // ✅ CLERK JWT
 
     const formData = new FormData();
     formData.append("file", files[0]);
-    formData.append("clerkId", userId); 
+    formData.append("clerkId", userId);
+
     try {
       const response = await fetch(BASE_URL + "/upload", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`, // ✅ JWT SENT
+          Authorization: `Bearer ${token}`,
         },
         body: formData,
       });
@@ -53,22 +65,30 @@ export default function Page() {
         const errorText = await response.text();
         toast.error(`Error: ${response.status} - ${errorText}`);
         setFiles([]);
+        setIsUploading(false);
         return;
       }
 
       const data = await response.json();
       console.log("Upload success:", data);
-      toast.success("File uploaded successfully!");
-      //console.log("File path used:", response?.path);
 
+      // ✅ Update state
+      setFileId(data.fileId);
       setFiles(files);
+      setPublicUrl(data.publicUrl);
+
+      // ✅ Call extractText with the actual values, not from state
+      await extractTextWithData(data.fileId, data.publicUrl, files[0].type);
+
+      toast.success("File uploaded successfully!");
+      setIsUploading(false);
     } catch (err) {
       toast.error("Upload failed");
       console.error("Fetch error:", err);
       setFiles([]);
+      setIsUploading(false);
     }
   };
-
 
   const handleSubmit = async () => {
     if (!isSignedIn) {
@@ -78,6 +98,11 @@ export default function Page() {
 
     if (files.length === 0) {
       toast.warning("Please upload a file before querying!");
+      return;
+    }
+
+    if (!FileId) {
+      toast.warning("File is not uploaded properly!");
       return;
     }
 
@@ -115,6 +140,7 @@ export default function Page() {
         },
         body: JSON.stringify({
           clerk_id: id,
+          file_id: FileId,
           title,
         }),
       });
@@ -134,7 +160,44 @@ export default function Page() {
     }
   };
 
+  const extractTextWithData = async (fileId: string, url: string, fileType: string) => {
+    try {
+      const token = await getToken();
 
+      if (!token) {
+        console.error("No auth token available");
+        return;
+      }
+
+      toast.info("Extracting text from document...");
+
+      const response = await fetch(BASE_URL + "/extract", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          file_id: fileId,        // ✅ Direct parameter
+          publicUrl: url,         // ✅ Direct parameter
+          fileType: fileType,     // ✅ Direct parameter
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+
+      const data = await response.json();
+      console.log("Text extracted successfully:", data);
+      toast.success("Document processed successfully!");
+
+    } catch (err: any) {
+      console.error("Extract error:", err);
+      toast.error("Failed to extract text from document");
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
@@ -186,9 +249,23 @@ export default function Page() {
               <Input
                 type="file"
                 onChange={(e) => handleFileUpload(Array.from(e.target.files || []))}
-                className="w-full h-12 bg-slate-900/70 text-slate-200 border border-slate-600 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-600 file:text-white file:cursor-pointer hover:file:bg-indigo-500"
+                disabled={isUploading}
+                className="w-full h-12 bg-slate-900/70 text-slate-200 border border-slate-600 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-600 file:text-white file:cursor-pointer hover:file:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               />
-              {files.length > 0 && (
+
+              {/* Loader */}
+              {isUploading && (
+                <div className="flex items-center gap-3 text-sm text-blue-400 bg-slate-900/50 rounded-lg px-4 py-3 animate-pulse">
+                  <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span className="font-medium">Uploading your document...</span>
+                </div>
+              )}
+
+              {/* Success indicator */}
+              {files.length > 0 && !isUploading && (
                 <div className="flex items-center gap-2 text-sm text-slate-400 bg-slate-900/50 rounded-lg px-4 py-2">
                   <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

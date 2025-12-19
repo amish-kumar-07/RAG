@@ -13,7 +13,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "@clerk/clerk-sdk-node": "^4.13.23",
+    "@clerk/clerk-sdk-node": "^5.1.6",
     "@neondatabase/serverless": "^1.0.2",
     "@supabase/supabase-js": "^2.87.1",
     "@types/express": "^5.0.3",
@@ -21,7 +21,11 @@
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
     "express": "^5.1.0",
+    "langchain": "^1.2.2",
+    "mammoth": "^1.11.0",
     "multer": "^2.0.2",
+    "pdf-parse": "^2.4.5",
+    "pdfjs-dist": "^5.4.449",
     "typescript": "^5.9.3",
     "uuid": "^13.0.0"
   },
@@ -29,6 +33,7 @@
     "@types/cors": "^2.8.19",
     "@types/multer": "^2.0.0",
     "@types/node": "^25.0.0",
+    "@types/pdf-parse": "^1.1.5",
     "drizzle-kit": "^0.31.8",
     "tsx": "^4.21.0"
   }

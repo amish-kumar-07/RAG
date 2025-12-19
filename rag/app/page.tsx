@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useAuth, useUser } from "@clerk/nextjs";
 import { useToast } from "@/components/ui/toast";
-import "./globals.css"
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL!;
 
 export default function LandingPage() {
