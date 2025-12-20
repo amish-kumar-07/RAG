@@ -5,6 +5,7 @@ import router from "./dbroute/User.js";
 import { getSupabaseClient } from "./superbase/utility.js";
 import { createFileMetaDate } from "./session/fileSession.js";
 import { extractAndStore} from "./session/chunksStore.js";
+import conversation from "./conversations/conversations.js";
 
 const app = express();
 const PORT = 4000;
@@ -27,6 +28,7 @@ const ALLOWED_MIME_TYPES = [
 
 
 app.use("/", router);
+app.use("/",conversation);
 
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {

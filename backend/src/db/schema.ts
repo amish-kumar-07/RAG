@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, uuid, timestamp, varchar, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, uuid, timestamp, varchar, jsonb , integer } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   user_id: uuid("user_id").primaryKey().default(sql`gen_random_uuid()`),
@@ -48,16 +48,32 @@ export const ragSessions = pgTable("rag_sessions", {
     .notNull()
     .references(() => users.clerk_id),
 
-  file_id: uuid("file_id") // ✅ FIXED
+  file_id: uuid("file_id")
     .notNull()
     .references(() => files.id, { onDelete: "cascade" }),
 
-  fileInformation : uuid("file_Infomation")
-                    .notNull()
-                    .references(()=>fileInformation.id ,{ onDelete : "cascade" }),
+  fileInformation: uuid("file_information")
+    .notNull()
+    .references(() => fileInformation.id, { onDelete: "cascade" }),
 
   title: varchar("title", { length: 150 }),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
+
+export const conversations = pgTable("conversations", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+
+  session_id: uuid("session_id")
+    .notNull()
+    .references(() => ragSessions.id, { onDelete: "cascade" }),
+
+  role: varchar("role", { length: 20 }).notNull(), // user | assistant 
+
+  content: text("content").notNull(),
+
+  sequence: integer("sequence").notNull(),
+
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
 

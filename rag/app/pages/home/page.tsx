@@ -20,6 +20,7 @@ export default function Page() {
   const [FileId, setFileId] = useState("");
   const [publicUrl, setPublicUrl] = useState("");
   const [FileInfoId,setFileInfoId] = useState("");
+  const [SessionId,setSessionId] = useState("");
 
   useEffect(() => {
     console.log("Updated fileId:", FileId);
@@ -154,9 +155,9 @@ export default function Page() {
       }
 
       const data = await response.json();
-
+      console.log("Data :",data.session.id);
+      setSessionId(data.session.id);
       router.push(`/pages/chatpage/${data.session.id}`);
-
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || "Failed to create session");
