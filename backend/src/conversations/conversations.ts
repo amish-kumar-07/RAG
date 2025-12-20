@@ -2,7 +2,8 @@ import { Router } from "express";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getContext } from "./getFileInfomation.js";
 import { last10Conversation , conversationsToString } from "./lastConversation.js";
-import { conversations } from "../db/schema.js";
+import { saveConversation , getConversations } from "./saveConversation.js";
+import { getSessionInfo } from "./getSession.js";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const conversation = Router();
@@ -51,8 +52,6 @@ ANSWER:
 `;
 }
 
-
-
 conversation.post("/generate", async (req, res) => {
   try {
     const { prompt, session_id, fileInformation_id } = req.body;
@@ -79,6 +78,20 @@ conversation.post("/generate", async (req, res) => {
     });
 
     const llmanswer = await generateText(finalPrompt);
+    
+    const userDataSave = await saveConversation(session_id,"user",prompt);
+
+    if(!userDataSave)
+    {
+      return res.status(401).json({message : "Error in storing data in db"}); 
+    }
+
+    const llmresponseSave = await saveConversation(session_id,"assistant",llmanswer);
+    
+    if(!llmresponseSave)
+    {
+      return res.status(401).json({message : "Error in storing data in db"}); 
+    }
 
     return res.status(201).json({
       message: "Final Output",
@@ -89,6 +102,101 @@ conversation.post("/generate", async (req, res) => {
     return res
       .status(500)
       .json({ error: "Server side error while generation" });
+  }
+});
+
+conversation.get("/message", async (req, res) => {
+  try {
+    const { session_id } = req.query;
+
+    // Validate session_id
+    if (!session_id || typeof session_id !== "string") {
+      return res.status(400).json({ 
+        error: "session_id is required as a query parameter" 
+      });
+    }
+
+    // Get all conversations for this session
+    const messages = await getConversations(session_id);
+
+    // Check if any messages exist
+    if (!messages || messages.length === 0) {
+      return res.status(200).json({ 
+        message: "No conversations found for this session",
+        data: [] 
+      });
+    }
+
+    // Return the messages
+    return res.status(200).json({
+      message: "Conversations retrieved successfully",
+      count: messages.length,
+      data: messages
+    });
+
+  } catch (err) {
+    console.error("Error fetching messages:", err);
+    return res.status(500).json({ error: "Server side error!!" });
+  }
+});
+
+conversation.post("/chat", async (req, res) => {
+  try {
+    const { prompt, session_id } = req.body;
+    
+    const data = await getSessionInfo(session_id);
+    const fileInformation_id = data?.fileInformation;
+    
+    if (!prompt || !session_id || !fileInformation_id) {
+      return res.status(400).json({
+        error: "prompt, session_id, and fileInformation_id are required",
+      });
+    }
+    
+    const context = await getContext(fileInformation_id);
+
+    if (!context) {
+      return res.status(404).json({ error: "No context found" });
+    }
+
+    const last10Conv = await last10Conversation(session_id);
+    const conversationHistory = conversationsToString(last10Conv);
+
+    const finalPrompt = buildFinalPrompt({
+      prompt,
+      conversationHistory,
+      contextText: context,
+    });
+
+    const llmanswer = await generateText(finalPrompt);
+    
+    // Save user message
+    const userDataSave = await saveConversation(session_id, "user", prompt);
+
+    if (!userDataSave) {
+      return res.status(500).json({ error: "Error storing user message in database" }); 
+    }
+
+    // Save assistant message
+    const llmresponseSave = await saveConversation(session_id, "assistant", llmanswer);
+    
+    if (!llmresponseSave) {
+      return res.status(500).json({ error: "Error storing assistant message in database" }); 
+    }
+
+    // ✅ FIXED: Return the correct shape matching APIMessage
+    return res.status(201).json({
+      id: llmresponseSave.id || Date.now().toString(), // Use actual DB ID or timestamp
+      role: "assistant",
+      content: llmanswer,
+      created_at: llmresponseSave.created_at || new Date().toISOString(),
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ 
+      error: "Server side error while generation" 
+    });
   }
 });
 

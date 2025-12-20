@@ -1,11 +1,19 @@
+// app/pages/chatpage/[id]/page.tsx
+
 import ChatClient from '@/components/ChatClient';
 
-interface PageProps {
-  params: { chatId: string };
-}
+export default async function ChatPage({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
+}) {
+  // In Next.js 15, params is a Promise, so we need to await it
+  const { id } = await params;
 
-export default function ChatPage({ params }: PageProps) {
-  const { chatId } = params;
-
-  return <ChatClient chatId={chatId} />;
+  return (
+    <ChatClient 
+      chatId={id} 
+      fileInfoId="your-file-info-id-here" // You need to provide this
+    />
+  );
 }
