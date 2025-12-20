@@ -4,6 +4,9 @@ import { getContext } from "./getFileInfomation.js";
 import { last10Conversation , conversationsToString } from "./lastConversation.js";
 import { saveConversation , getConversations } from "./saveConversation.js";
 import { getSessionInfo } from "./getSession.js";
+import { db } from "../db/index.js";
+import { ragSessions } from "../db/schema.js";
+import { eq , desc } from "drizzle-orm";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const conversation = Router();
@@ -196,6 +199,50 @@ conversation.post("/chat", async (req, res) => {
     console.error(err);
     return res.status(500).json({ 
       error: "Server side error while generation" 
+    });
+  }
+});
+
+conversation.get("/sessions", async (req, res) => {
+  try {
+    const { clerk_id } = req.query;
+
+    // Validate clerk_id
+    if (!clerk_id || typeof clerk_id !== "string") {
+      return res.status(400).json({ 
+        error: "clerk_id is required as a query parameter" 
+      });
+    }
+
+    // Get all sessions for this user using Drizzle ORM
+    const sessions = await db
+      .select({
+        id: ragSessions.id,
+        title: ragSessions.title,
+        created_at: ragSessions.created_at,
+      })
+      .from(ragSessions)
+      .where(eq(ragSessions.clerk_id, clerk_id))
+      .orderBy(desc(ragSessions.created_at)); // Most recent first
+
+    // Check if any sessions exist
+    if (!sessions || sessions.length === 0) {
+      return res.status(200).json({ 
+        message: "No sessions found for this user",
+        sessions: [] 
+      });
+    }
+
+    return res.status(200).json({
+      message: "Sessions retrieved successfully",
+      count: sessions.length,
+      sessions: sessions
+    });
+
+  } catch (err) {
+    console.error("Error fetching sessions:", err);
+    return res.status(500).json({ 
+      error: "Server side error while fetching sessions" 
     });
   }
 });

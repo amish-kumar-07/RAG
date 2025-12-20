@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import ChatHistory from "@/components/ChatHistory";
 import { useToast } from "@/components/ui/toast";
 import { useRouter } from "next/navigation";
 import {
@@ -15,6 +16,7 @@ import {
   useUser,
 } from "@clerk/nextjs";
 
+
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL!;
 
 export default function Page() {
@@ -26,6 +28,7 @@ export default function Page() {
   const [publicUrl, setPublicUrl] = useState("");
   const [fileInfoId, setFileInfoId] = useState("");
   const [sessionId, setSessionId] = useState("");
+  const [refreshChatHistory, setRefreshChatHistory] = useState(0);
 
   const toast = useToast();
   const router = useRouter();
@@ -183,7 +186,8 @@ export default function Page() {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!isSignedIn) {
       toast.warning("Please sign in to submit queries");
       return;
@@ -249,6 +253,7 @@ export default function Page() {
       setSessionId(newSessionId);
 
       await generateResponse(newSessionId, fileInfoId);
+      setRefreshChatHistory(prev => prev + 1);
       router.push(`/pages/chatpage/${newSessionId}`);
     } catch (error: any) {
       console.error("Submit error:", error);
@@ -413,6 +418,9 @@ export default function Page() {
               </Button>
             </div>
           </div>
+
+          {/* ✅ ADD THIS - Chat History Component */}
+          <ChatHistory refreshTrigger={refreshChatHistory} />
         </div>
       </main>
     </div>
