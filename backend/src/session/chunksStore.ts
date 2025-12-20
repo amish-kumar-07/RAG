@@ -57,7 +57,10 @@ export async function extractText(buffer: Buffer, mimeType: string): Promise<str
     case "image/png":
     case "image/jpeg":
     case "image/webp":
-      return `[Image File: ${mimeType}]\nThis is an image file. Text extraction from images requires OCR processing.\nImage URL can be used for visual analysis or manual review.`;
+      const base64Image = buffer.toString("base64");
+
+      // Return base64 (you can store or forward it)
+      return base64Image;
 
     default:
       throw new Error(`Unsupported file type: ${mimeType}`);

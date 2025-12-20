@@ -22,8 +22,8 @@ const ALLOWED_MIME_TYPES = [
   "image/png",
   "image/jpeg",
   "image/webp",
-  "application/msword", // .doc
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+  //"application/msword", // .doc
+  //"application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
 ];
 
 

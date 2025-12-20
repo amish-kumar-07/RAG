@@ -18,6 +18,7 @@ export async function generateText(prompt: string) {
   return result.response.text();
 }
 
+
 type PromptInput = {
   prompt: string;
   conversationHistory: string;
@@ -66,6 +67,7 @@ conversation.post("/generate", async (req, res) => {
     }
 
     const context = await getContext(fileInformation_id);
+    console.log("Context : ",context?.full_content);
 
     if (!context) {
       return res.status(404).json({ error: "No context found" });
@@ -73,16 +75,21 @@ conversation.post("/generate", async (req, res) => {
 
     const last10Conv = await last10Conversation(session_id);
     const conversationHistory = conversationsToString(last10Conv);
+    console.log("Last 10 conversation : ",last10Conv);
 
     const finalPrompt = buildFinalPrompt({
       prompt,
       conversationHistory,
-      contextText: context,
+      contextText: context?.full_content,
     });
 
+    console.log("Final Prompt : ",finalPrompt);
+
     const llmanswer = await generateText(finalPrompt);
-    
+    console.log("LLM Response : ",llmanswer);
+
     const userDataSave = await saveConversation(session_id,"user",prompt);
+    console.log("User Response : ",userDataSave);
 
     if(!userDataSave)
     {
@@ -90,12 +97,12 @@ conversation.post("/generate", async (req, res) => {
     }
 
     const llmresponseSave = await saveConversation(session_id,"assistant",llmanswer);
-    
+    console.log("LLM Response : ",llmresponseSave);
     if(!llmresponseSave)
     {
       return res.status(401).json({message : "Error in storing data in db"}); 
     }
-
+   
     return res.status(201).json({
       message: "Final Output",
       llmanswer,
@@ -168,7 +175,7 @@ conversation.post("/chat", async (req, res) => {
     const finalPrompt = buildFinalPrompt({
       prompt,
       conversationHistory,
-      contextText: context,
+      contextText: context?.full_content,
     });
 
     const llmanswer = await generateText(finalPrompt);

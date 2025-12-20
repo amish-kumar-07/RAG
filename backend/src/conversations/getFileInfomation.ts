@@ -8,5 +8,5 @@ export async function getContext(fileInformationId: string) {
     .from(fileInformation)
     .where(eq(fileInformation.id, fileInformationId));
 
-  return result?.full_content ?? null;
+  return result ?? null;
 }
