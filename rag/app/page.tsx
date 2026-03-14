@@ -28,7 +28,7 @@ export default function LandingPage() {
         return;
       }
 
-      const response = await fetch(BASE_URL + "/api/register", {
+      const response = await fetch(`${BASE_URL}"/api/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json", // ✅ REQUIRED
