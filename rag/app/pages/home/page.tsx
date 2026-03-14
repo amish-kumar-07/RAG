@@ -229,7 +229,7 @@ export default function Page() {
       const cleanName = rawFileName.replace(/[_-]+/g, " ");
       const title = cleanName.trim().split(/\s+/).slice(0, 4).join(" ");
 
-      const response = await fetch(`${BASE_URL}/create-session`, {
+      const response = await fetch(`${BASE_URL}/api/create-session`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
