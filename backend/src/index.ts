@@ -27,7 +27,7 @@ const ALLOWED_MIME_TYPES = [
 ];
 
 
-app.use("/", router);
+app.use("/api", router);
 app.use("/",conversation);
 
 app.post("/upload", upload.single("file"), async (req, res) => {
